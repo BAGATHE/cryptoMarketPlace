@@ -38,7 +38,7 @@ export default function SignIn({ navigation }) {
           style={styles.input}
           keyboardType="email-address"
           underlineColor="#e0e0e0"
-          value={email}
+          value={email?email:"lol@gmail.com"}
           onChangeText={setEmail}
         />
 
@@ -49,7 +49,7 @@ export default function SignIn({ navigation }) {
           secureTextEntry
           right={<TextInput.Icon icon="eye" />}
           underlineColor="#e0e0e0"
-          value={password}
+          value={password?password:'pass'}
           onChangeText={setPassword}
         />
         
@@ -70,7 +70,7 @@ export default function SignIn({ navigation }) {
               style={styles.input}
               keyboardType="numeric"
               underlineColor="#e0e0e0"
-              value={otp}
+              value={otp?otp:'123456'}
               onChangeText={setOtp}
         />
 
