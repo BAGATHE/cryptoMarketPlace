@@ -1,57 +1,49 @@
 // screens/SignUp.js
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView ,Alert} from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
+import React,{useState} from 'react';
+
 
 export default function  SignUp({ navigation }) {
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+  const handleSignUp = () => {
+      if (email && password) {
+          Alert.alert('Sign Up', 'vous etes inscris');
+          navigation.navigate('SignIn');
+        } else {
+          Alert.alert('Validation Error', 'Please fill in both email and password.');
+        }
+  }
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
         <Text style={styles.title}>Create an account</Text>
         <TextInput
-          label="Name"
-          mode="flat"
-          style={styles.input}
-          underlineColor="#e0e0e0"
+                label="Email"
+                mode="flat"
+                style={styles.input}
+                keyboardType="email-address"
+                underlineColor="#e0e0e0"
+                value={email}
+                onChangeText={setEmail}
         />
-        
+      
         <TextInput
-          label="Email"
-          mode="flat"
-          style={styles.input}
-          keyboardType="email-address"
-          underlineColor="#e0e0e0"
-        />
-        
-        <TextInput
-          label="Phone number"
-          mode="flat"
-          style={styles.input}
-          keyboardType="phone-pad"
-          underlineColor="#e0e0e0"
-        />
-        
-        <TextInput
-          label="Password"
-          mode="flat"
-          style={styles.input}
-          secureTextEntry
-          right={<TextInput.Icon icon="eye" />}
-          underlineColor="#e0e0e0"
-        />
-        
-        <TextInput
-          label="Confirm password"
-          mode="flat"
-          style={styles.input}
-          secureTextEntry
-          right={<TextInput.Icon icon="eye" />}
-          underlineColor="#e0e0e0"
+                label="Password"
+                mode="flat"
+                style={styles.input}
+                secureTextEntry
+                right={<TextInput.Icon icon="eye" />}
+                underlineColor="#e0e0e0"
+                value={password}
+                onChangeText={setPassword}
         />
         
         <Button
           mode="contained"
-          onPress={() => {/* Ajoutez votre logique d'inscription */}}
-          style={styles.signupButton}
+          onPress={handleSignUp}
+          style={styles.buttonCto}
           labelStyle={styles.signupButtonText}
         >
           Sign up
@@ -158,5 +150,9 @@ const styles = StyleSheet.create({
   },
   gmailButton: {
     backgroundColor: '#666',
-  }
+  },
+  buttonCto: {
+    marginVertical: 10,
+    backgroundColor:'#002967',
+  },
 });
