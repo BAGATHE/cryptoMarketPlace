@@ -1,21 +1,47 @@
 // screens/SignIn.js
-import { StyleSheet, View, Text, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ScrollView,Alert } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useState } from 'react';
+
 export default function SignIn({ navigation }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+
+  const handleSignIn = () => {
+    if (email && password) {
+      setOtpSent(true);
+      Alert.alert('OTP Sent', 'An OTP has been sent to your email.');
+    } else {
+      Alert.alert('Validation Error', 'Please fill in both email and password.');
+    }
+  };
+
+  const handleVerifyOtp = () => {
+    if (otp === '123456') {
+      Alert.alert('Success', 'You have successfully signed in.');
+      navigation.navigate('Home');
+    } else {
+      Alert.alert('Error', 'Invalid OTP. Please try again.');
+    }
+  };
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
-        <Text style={styles.title}>Sign In</Text>
-        
-        <TextInput
+      <Text style={styles.title}>{otpSent ? 'Enter OTP' : 'Sign In'}</Text>
+         {!otpSent ? (
+            <>
+          <TextInput
           label="Email"
           mode="flat"
           style={styles.input}
           keyboardType="email-address"
           underlineColor="#e0e0e0"
+          value={email}
+          onChangeText={setEmail}
         />
-        
+
         <TextInput
           label="Password"
           mode="flat"
@@ -23,17 +49,42 @@ export default function SignIn({ navigation }) {
           secureTextEntry
           right={<TextInput.Icon icon="eye" />}
           underlineColor="#e0e0e0"
+          value={password}
+          onChangeText={setPassword}
         />
         
         <Button
           mode="contained"
-          onPress={() =>  navigation.navigate('Home')}
-          style={styles.signInButton}
+          style={styles.buttonCto}
+          onPress={handleSignIn}
           labelStyle={styles.signInButtonText}
         >
-          Sign In
+          Send OTP
         </Button>
+        </>
+        ) : (
+        <>
+         <TextInput
+              label="OTP"
+              mode="flat"
+              style={styles.input}
+              keyboardType="numeric"
+              underlineColor="#e0e0e0"
+              value={otp}
+              onChangeText={setOtp}
+        />
 
+        <Button
+              mode="contained"
+              onPress={handleVerifyOtp}
+              style={styles.buttonCto}
+              labelStyle={styles.signInButtonText}
+            >
+              Verify OTP
+        </Button>
+        </>
+        )}
+        {!otpSent && (
         <View style={styles.registerSection}>
           <Text style={styles.registerText}>Don't have an Account? </Text>
           <Text 
@@ -43,7 +94,7 @@ export default function SignIn({ navigation }) {
             Register
           </Text>
         </View>
-
+        )}
         <View style={styles.socialSection}>
           <Text style={styles.orText}>Or</Text>
           <Text style={styles.loginWithText}>Login with</Text>
@@ -136,5 +187,9 @@ const styles = StyleSheet.create({
   },
   gmailButton: {
     backgroundColor: '#666',
-  }
+  },
+  buttonCto: {
+    marginVertical: 10,
+    backgroundColor:'#002967',
+  },
 });

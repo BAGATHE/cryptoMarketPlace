@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, View, ScrollView,TouchableOpacity} from 'react-native';
 import {
   Appbar,
   Text,
@@ -8,22 +8,34 @@ import {
   List,
   Button,
   Drawer,
+  Avatar, 
   useTheme,
 } from 'react-native-paper';
-
+const initialCryptomonnaies = [
+  { id: 1, icon: 'bitcoin', title: 'Bitcoin', subtitle: 'BTC', amount: '98000 USD', color: '#FF9900', isFavorite: false },
+  { id: 2, icon: 'ethereum', title: 'Ethereum', subtitle: 'ETH', amount: '3000 USD', color: '#3C3C3D', isFavorite: true },
+  { id: 3, icon: 'litecoin', title: 'Litecoin', subtitle: 'LTC', amount: '400 USD', color: '#BEBEBE', isFavorite: false },
+  { id: 4, icon: 'exchange', title: 'Exchange Token', subtitle: 'USDT', amount: '1 USD', color: '#26A17B', isFavorite: true },
+];
+const actions = [
+  { icon: 'bank-plus', label: 'Dépôt', route: 'DepositPage' },
+  { icon: 'bank-minus', label: 'Retrait', route: 'WithdrawalPage' },
+  { icon: 'wallet', label: 'Wallet', route: 'WalletPage' }
+];
 export default function HomeScreen({ navigation }) {
   const theme = useTheme();
   const [drawerVisible, setDrawerVisible] = React.useState(false);
-
+  const [fond,setFond] = useState(25000)
   const toggleDrawer = () => setDrawerVisible(!drawerVisible);
-
-  const cardNumber = '4562 1122 4595 7852';
-  const transactions = [
-    { icon: 'apple', title: 'Apple Store', subtitle: 'Entertainment', amount: '-$5.99', color: '#000' },
-    { icon: 'spotify', title: 'Spotify', subtitle: 'Music', amount: '-$12.99', color: '#1DB954' },
-    { icon: 'bank-transfer', title: 'Money Transfer', subtitle: 'Transaction', amount: '$300', color: '#4A90E2' },
-    { icon: 'cart', title: 'Grocery', subtitle: 'Shopping', amount: '-$88', color: '#FF6B6B' },
-  ];
+  const [cryptomonnaiesList, setCryptoMonnaieList] = useState(initialCryptomonnaies);
+  
+  const toggleFavorite = (id) => {
+    setCryptoMonnaieList(prevList =>
+      prevList.map(cryptomonnaie =>
+        cryptomonnaie.id === id ? { ...cryptomonnaie, isFavorite: !cryptomonnaie.isFavorite } : cryptomonnaie
+      )
+    );
+  };
 
   return (
     <>
@@ -31,8 +43,7 @@ export default function HomeScreen({ navigation }) {
       <Appbar.Header>
         <Appbar.Action icon="menu" onPress={toggleDrawer} />
         <View style={styles.headerContent}>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.username}>Tanya Myroniuk</Text>
+          <Text style={styles.welcomeText}>Welcome back</Text>
         </View>
         <Appbar.Action icon="magnify" onPress={() => {}} />
       </Appbar.Header>
@@ -80,47 +91,65 @@ export default function HomeScreen({ navigation }) {
         {/* Card Section */}
         <Card style={styles.card}>
           <Card.Content>
-            <Text style={styles.cardNumber}>{cardNumber}</Text>
+            <Text style={styles.fond}>{fond}</Text>
             <View style={styles.cardDetails}>
               <View>
-                <Text>AR Jonson</Text>
+                <Text>Emadaly </Text>
                 <Text>24/2000</Text>
               </View>
-              <IconButton icon="credit-card" size={24} />
+              <Avatar.Image size={96} source={require('../../assets/images/profil.jpg')} />
             </View>
           </Card.Content>
         </Card>
 
         {/* Actions */}
         <View style={styles.actions}>
-          {['arrow-up', 'arrow-down', 'currency-usd', 'plus'].map((icon, index) => (
-            <View key={index} style={styles.actionItem}>
-              <IconButton icon={icon} />
-              <Text>{icon === 'arrow-up' ? 'Send' : icon === 'arrow-down' ? 'Receive' : icon === 'currency-usd' ? 'Loan' : 'Topup'}</Text>
-            </View>
+          {actions.map((action, index) => (
+           <TouchableOpacity 
+           key={index} 
+           style={styles.actionItem} 
+           onPress={() => navigation.navigate(action.route)}
+           >
+           <IconButton 
+             icon={action.icon} 
+           />
+           <Text>{action.label}</Text>
+         </TouchableOpacity>
           ))}
-        </View>
+       </View>
 
         {/* Transactions */}
         <View style={styles.transactionHeader}>
-          <Text>Transaction</Text>
+          <Text>Cryptomonnaie</Text>
           <Button mode="text" textColor={theme.colors.primary}>
-            See All
+            Cours Actuel
           </Button>
         </View>
-        {transactions.map((transaction, index) => (
-          <List.Item
-            key={index}
-            title={transaction.title}
-            description={transaction.subtitle}
-            left={() => <List.Icon icon={transaction.icon} color={transaction.color} />}
-            right={() => (
-              <Text style={[styles.amount, { color: transaction.amount.startsWith('-') ? 'red' : theme.colors.primary }]}>
-                {transaction.amount}
+        {cryptomonnaiesList.map((cryptomonnaie) => (
+        <List.Item
+          key={cryptomonnaie.id}
+          title={cryptomonnaie.title}
+          description={cryptomonnaie.subtitle}
+          left={() => <List.Icon icon={cryptomonnaie.icon} color={cryptomonnaie.color} />}
+          right={() => (
+            <View style={styles.rightContainer}>
+              <Text
+                style={[
+                  styles.amount,
+                  { color: cryptomonnaie.amount.startsWith('-') ? 'red' : theme.colors.primary },
+                ]}
+              >
+                {cryptomonnaie.amount}
               </Text>
-            )}
-          />
-        ))}
+              <IconButton
+                icon={cryptomonnaie.isFavorite ? 'heart' : 'heart-outline'}
+                color={cryptomonnaie.isFavorite ? 'red' : 'black'}
+                onPress={() => toggleFavorite(cryptomonnaie.id)}
+              />
+            </View>
+          )}
+        />
+      ))}
       </ScrollView>
 
       {/* Bottom Navigation */}
@@ -152,7 +181,7 @@ const styles = StyleSheet.create({
     margin: 16,
     backgroundColor: '#1a237e',
   },
-  cardNumber: {
+  fond: {
     color: 'white',
     fontSize: 20,
     letterSpacing: 2,
@@ -187,5 +216,13 @@ const styles = StyleSheet.create({
   },
   drawer: {
     backgroundColor: '#fff',
+  },
+  amount: {
+    fontSize: 16,
+    alignSelf: 'center',
+  },
+  rightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
