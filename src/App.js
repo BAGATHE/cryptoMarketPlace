@@ -8,6 +8,7 @@ import LandingScreen from '@screens/landing/landingScreen';
 import SignIn from '@screens/authentification/signInScreen';
 import SignUp from '@screens/authentification/signUpScreen';
 import HomeScreen from '@screens/home/homeScreen';
+import ProfilScreen from '@screens/profil/profilScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -19,6 +20,7 @@ function MainStack() {
       <Stack.Screen name="SignIn" component={SignIn} />
       <Stack.Screen name="SignUp" component={SignUp} />
       <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Profil" component={ProfilScreen} />
     </Stack.Navigator>
   );
 }
