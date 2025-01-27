@@ -19,8 +19,8 @@ const initialCryptomonnaies = [
   { id: 3, icon: 'litecoin', title: 'Litecoin', subtitle: 'LTC', amount: '400 USD', color: '#BEBEBE', isFavorite: false },
 ];
 const actions = [
-  { icon: require('../../assets/images/depot.png'), label: 'Dépôt', route: 'DepositPage' },
-  { icon: require('../../assets/images/retrait.png'), label: 'Retrait', route: 'WithdrawalPage' },
+  { icon: require('../../assets/images/depot.png'), label: 'Dépôt', route: 'Depot' },
+  { icon: require('../../assets/images/retrait.png'), label: 'Retrait', route: 'Retrait' },
   { icon: require('../../assets/images/wallet2.png'), label: 'Wallet', route: 'WalletPage' },
 ];
 
@@ -67,7 +67,7 @@ export default function HomeScreen({ navigation }) {
           />
           <Drawer.Item
             icon="credit-card"
-            label="My Cards"
+            label="Portefeuille Crypto"
             onPress={() => {
               setDrawerVisible(false);
               navigation.navigate('Landing');
@@ -75,18 +75,10 @@ export default function HomeScreen({ navigation }) {
           />
           <Drawer.Item
             icon="chart-bar"
-            label="Statistics"
+            label="Historique Vente/Achat"
             onPress={() => {
               setDrawerVisible(false);
               navigation.navigate('Statistics');
-            }}
-          />
-          <Drawer.Item
-            icon="cog"
-            label="Settings"
-            onPress={() => {
-              setDrawerVisible(false);
-              navigation.navigate('Settings');
             }}
           />
         </Drawer.Section>
@@ -140,7 +132,7 @@ export default function HomeScreen({ navigation }) {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        {['home', 'credit-card', 'chart-bar', 'cog'].map((icon, index) => (
+        {['home', 'credit-card', 'chart-bar'].map((icon, index) => (
           <IconButton key={index} icon={icon} />
         ))}
       </View>
