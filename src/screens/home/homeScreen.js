@@ -3,16 +3,14 @@ import { StyleSheet, View, ScrollView,TouchableOpacity} from 'react-native';
 import {
   Appbar,
   Text,
-  Card,
   IconButton,
   List,
-  Button,
   Drawer,
-  Avatar, 
   useTheme,
 } from 'react-native-paper';
 import UserCard from '@components/user/UserCard';
 import ActionList from '@components/ActionList';
+import BottomNav from '@components/BottomNav';
 const initialCryptomonnaies = [
   { id: 1, icon: 'bitcoin', title: 'Bitcoin', subtitle: 'BTC', amount: '98000 USD', color: '#FF9900', isFavorite: false },
   { id: 2, icon: 'ethereum', title: 'Ethereum', subtitle: 'ETH', amount: '3000 USD', color: '#3C3C3D', isFavorite: true },
@@ -21,7 +19,7 @@ const initialCryptomonnaies = [
 const actions = [
   { icon: require('../../assets/images/depot.png'), label: 'Dépôt', route: 'Depot' },
   { icon: require('../../assets/images/retrait.png'), label: 'Retrait', route: 'Retrait' },
-  { icon: require('../../assets/images/wallet2.png'), label: 'Wallet', route: 'WalletPage' },
+  { icon: require('../../assets/images/wallet2.png'), label: 'Wallet', route: 'PorteFeuille' },
 ];
 
 const user = {
@@ -70,7 +68,7 @@ export default function HomeScreen({ navigation }) {
             label="Portefeuille Crypto"
             onPress={() => {
               setDrawerVisible(false);
-              navigation.navigate('Landing');
+              navigation.navigate('PorteFeuille');
             }}
           />
           <Drawer.Item
@@ -78,7 +76,7 @@ export default function HomeScreen({ navigation }) {
             label="Historique Vente/Achat"
             onPress={() => {
               setDrawerVisible(false);
-              navigation.navigate('Statistics');
+              navigation.navigate('HistoriqueAV');
             }}
           />
         </Drawer.Section>
@@ -131,11 +129,7 @@ export default function HomeScreen({ navigation }) {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        {['home', 'credit-card', 'chart-bar'].map((icon, index) => (
-          <IconButton key={index} icon={icon} />
-        ))}
-      </View>
+      <BottomNav navigation={navigation} />
     </>
   );
 }

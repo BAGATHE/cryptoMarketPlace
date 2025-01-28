@@ -12,6 +12,8 @@ import ProfilScreen from '@screens/profil/profilScreen';
 import DepotScreen from '@screens/fond/depotScreen';
 import RetraitScreen from '@screens/fond/retraitScreen';
 import ConfirmationPage from '@screens/fond/confirmationPage';
+import PortefeuilleScreen from '@screens/portefeuille/portefeuilleScreen';
+import TransactionHistoryScreen from '@screens/portefeuille/transactionHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -27,6 +29,8 @@ function MainStack() {
       <Stack.Screen name="Depot" component={DepotScreen} />
       <Stack.Screen name="Retrait" component={RetraitScreen} />
       <Stack.Screen name="ConfirmationPage" component={ConfirmationPage} />
+      <Stack.Screen name="PorteFeuille" component={PortefeuilleScreen} />
+      <Stack.Screen name="HistoriqueAV" component={TransactionHistoryScreen} />
     </Stack.Navigator>
   );
 }
