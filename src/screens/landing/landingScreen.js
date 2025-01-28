@@ -3,7 +3,6 @@ import React from "react";
 import { StyleSheet, View, Text, Image } from "react-native";
 import { Button } from "react-native-paper";
 import logo from '../../assets/images/crypto.png';
-import { red } from "react-native-reanimated/lib/typescript/Colors";
 import CryptoBackground from "@components/CryptoBackground";
 export default function LandingScreen({ navigation }) {
     return (
