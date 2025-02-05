@@ -1,41 +1,30 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet ,Image} from 'react-native';
 import { Card, Title, Paragraph, Text, IconButton, Divider } from 'react-native-paper';
 
 const CryptoCard = ({ crypto }) => {
-  const { id, name, symbol, amount, icon, value, change } = crypto;
+  const { id, cryptomonnaie_nom, cryptomonnaie_image, quantite } = crypto;
   
   return (
     <Card key={id} style={styles.cryptoCard}>
       <Card.Content>
         <View style={styles.cryptoHeader}>
           <View style={styles.leftContent}>
-            <IconButton icon={icon} size={30} />
+            <Image source={{ uri: cryptomonnaie_image }} style={styles.cryptoImage} />
             <View>
-              <Title style={styles.cryptoName}>{name}</Title>
-              <Paragraph style={styles.cryptoSymbol}>{symbol}</Paragraph>
+              <Title style={styles.cryptoName}>{cryptomonnaie_nom}</Title>
             </View>
-          </View>
-          <View style={styles.rightContent}>
-            <Text style={styles.cryptoValue}>{value}</Text>
-            <Text style={[
-              styles.cryptoChange,
-              { color: change.includes('+') ? '#4CAF50' : '#F44336' }
-            ]}>
-              {change}
-            </Text>
           </View>
         </View>
         <Divider style={styles.divider} />
         <View style={styles.amountContainer}>
           <Text style={styles.amountLabel}>Quantité</Text>
-          <Text style={styles.amount}>{amount} {symbol}</Text>
+          <Text style={styles.amount}>{quantite}</Text>
         </View>
       </Card.Content>
     </Card>
   );
 };
-
 const styles = StyleSheet.create({
   cryptoCard: {
     marginHorizontal: 16,
@@ -72,19 +61,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   divider: {
+    backgroundColor:'#002967',
     marginVertical: 12,
   },
   amountContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    backgroundColor: '#002967',
   },
   amountLabel: {
-    color: '#666',
+    color: 'white',
   },
   amount: {
     fontSize: 16,
     fontWeight: '500',
+    color:'white'
+  },
+  cryptoImage: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
   },
 });
 

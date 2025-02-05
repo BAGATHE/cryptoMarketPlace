@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "419066650129",
+    "project_id": "mobilerojo-7a2fd",
+    "storage_bucket": "mobilerojo-7a2fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419066650129:android:09c9a230cc0768f3781bb0",
+        "android_client_info": {
+          "package_name": "com.itu.MobileMarketPlace"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJQU8gt3DTu7CyvCO9JEWdSNrjYVxu-44"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

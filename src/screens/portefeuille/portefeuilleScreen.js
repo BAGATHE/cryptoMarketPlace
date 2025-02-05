@@ -1,28 +1,32 @@
 import CryptoCard from '@components/crypto/CryptoCard';
-import React from 'react';
+import React,{useState,useEffect} from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
-import { 
-  Appbar, 
-  Text, 
-  Surface, 
-  Title, 
-  IconButton,
-  useTheme,
-} from 'react-native-paper';
-
-// Données des cryptos (exemple)
-const cryptoData = [
-  { id: 1, name: 'Bitcoin', symbol: 'BTC', amount: 2.5, icon: 'bitcoin', change: '+5.2%', value: '95,000€' },
-  { id: 2, name: 'Ethereum', symbol: 'ETH', amount: 10, icon: 'ethereum', change: '-2.1%', value: '25,000€' },
-  { id: 3, name: 'Litecoin', symbol: 'LTC', amount: 50, icon: 'litecoin', change: '+1.8%', value: '5,000€' },
-];
-
+import { Appbar, Text, Surface, Title, useTheme,Button} from 'react-native-paper';
+import { useRoute } from "@react-navigation/native";
+import database from '@react-native-firebase/database';
 export default function PortefeuilleScreen({ navigation }) {
+  const route = useRoute();
   const theme = useTheme();
+  const { userId } = route.params;
+  const [cryptoData, setCryptoData] = useState([]);
 
-  const totalValue = '125,000€';
-  const dailyChange = '+4.2%';
+  useEffect(() => {
+    if (userId) {
+      const portefeuilleRef = database().ref(`/utilisateurs/${userId}/porteFeuille`);
 
+      portefeuilleRef.on('value', snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const cryptoArray = Object.values(data); 
+          setCryptoData(cryptoArray);
+        } else {
+          setCryptoData([]); 
+        }
+      });
+
+      return () => portefeuilleRef.off(); 
+    }
+  }, [userId]);
   return (
     <View style={styles.container}>
       <Appbar.Header style={[styles.appBar, { backgroundColor: '#002967' }]}>
@@ -32,23 +36,16 @@ export default function PortefeuilleScreen({ navigation }) {
       </Appbar.Header>
 
       <ScrollView style={styles.scrollView}>
-        <Surface style={styles.headerCard}>
-          <Text style={styles.portfolioLabel}>Valeur totale du portefeuille</Text>
-          <Text style={styles.totalValue}>{totalValue}</Text>
-          <View style={styles.changeContainer}>
-            <IconButton 
-              icon={dailyChange.includes('+') ? 'trending-up' : 'trending-down'} 
-              size={20}
-              iconColor={dailyChange.includes('+') ? '#4CAF50' : '#F44336'}
-            />
-            <Text style={[
-              styles.changeText,
-              { color: dailyChange.includes('+') ? '#4CAF50' : '#F44336' }
-            ]}>
-              {dailyChange} aujourd'hui
-            </Text>
-          </View>
-        </Surface>
+      <Surface style={styles.headerCard}>
+        <Text style={styles.portfolioLabel}>Historique achat et vente</Text>
+        <Button
+        mode="contained"
+        onPress={() => navigation.navigate('HistoriqueAV', { userId: userId })}
+        style={styles.button}
+        >
+          Voir 
+        </Button>
+      </Surface>
 
         <Title style={styles.sectionTitle}>Mes Actifs</Title>
 
@@ -81,6 +78,7 @@ const styles = StyleSheet.create({
   portfolioLabel: {
     fontSize: 16,
     color: '#666',
+    textAlign:'center'
   },
   totalValue: {
     fontSize: 36,
@@ -107,6 +105,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 12,
     elevation: 2,
+  },
+  button:{
+    backgroundColor: '#002967',
   },
 
 

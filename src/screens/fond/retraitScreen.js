@@ -1,28 +1,60 @@
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet, ActivityIndicator } from 'react-native';
-import { TextInput, Button, Title } from 'react-native-paper';
+import { Appbar,Title,Button,TextInput} from 'react-native-paper';
+import { useRoute } from "@react-navigation/native";
+import database from '@react-native-firebase/database';
 
 export default function RetraitScreen({ navigation }) {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
+  const route = useRoute();
+  const { userId ,fond} = route.params;
 
   const handleWithdrawal = () => {
     if (!amount || isNaN(amount)) {
       Alert.alert('Erreur', 'Veuillez entrer un montant valide');
       return;
     }
-    setLoading(true); // Démarre le chargement
-    setTimeout(() => {
-      setLoading(false); // Arrête le chargement après 2 secondes (simule un traitement)
-      Alert.alert('Retrait', 'En attente de validation');
-      setAmount('');
-      navigation.navigate('ConfirmationPage'); // Redirige vers une page de confirmation
-    }, 2000);
+    if(parseFloat(fond)< parseFloat(amount)){
+      Alert.alert('Warning', 'montant retirer doit etre inferieur au fond');
+      return;
+    }
+
+    setLoading(true); 
+
+    const currentDate = new Date().toISOString();
+
+    const transaction = {
+      userId: userId, 
+      amount: parseFloat(amount),
+      type: 'retrait', 
+      date: currentDate, 
+    };
+
+    database()
+      .ref('transactionFond')
+      .push(transaction)
+      .then(() => {
+        setLoading(false); 
+        Alert.alert('Succès', 'Retrait enregistré avec succès');
+        setAmount(''); 
+      })
+      .catch((error) => {
+        setLoading(false); 
+        Alert.alert('Erreur', 'Une erreur est survenue lors de l\'enregistrement du retrait');
+        console.error(error); 
+      });
   };
 
   return (
     <View style={styles.container}>
+        <Appbar.Header style={[styles.appBar, { backgroundColor: '#002967' }]}>
+        <Appbar.BackAction onPress={() => navigation.goBack()} color="white" />
+        <Appbar.Content title="Transaction Fond" color="white" />
+        <Appbar.Action icon="bell-outline" onPress={() => {}} color="white" />
+      </Appbar.Header>
       <Title style={styles.title}>Retrait</Title>
+      <Title style={styles.title}>disponible : {fond} </Title>
       <TextInput
         label="Montant à retirer"
         mode="outlined"
@@ -45,23 +77,24 @@ export default function RetraitScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: '#f5f5f5',
   },
   title: {
-    marginBottom: 20,
     fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
   },
   input: {
-    width: '100%',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   button: {
-    width: '100%',
-    backgroundColor: "#F44336",
+    marginTop: 8,
+    backgroundColor: '#F44336', // Couleur rouge pour le bouton de retrait
   },
   loading: {
-    marginVertical: 20,
+    marginTop: 16,
   },
 });

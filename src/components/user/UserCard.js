@@ -24,7 +24,7 @@ const UserCard = ({ name, fond, navigation }) => {
           <View style={styles.details}>
             <Text style={styles.name}>{name}</Text>
             <Text style={styles.fond}>
-              Fond actuel : <Text style={styles.fondValue}>{fond} €</Text>
+              Fond actuel : <Text style={styles.fondValue}>{fond.toFixed(2)} $</Text>
             </Text>
           </View>
         </View>
