@@ -1,46 +1,110 @@
-import React, { useState } from 'react';
-import { StyleSheet, View, ScrollView,TouchableOpacity} from 'react-native';
-import {
-  Appbar,
-  Text,
-  IconButton,
-  List,
-  Drawer,
-  useTheme,
-} from 'react-native-paper';
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View, ScrollView,TouchableOpacity, Alert,Image} from 'react-native';
+import {Appbar,Text,IconButton,List,Drawer,useTheme,} from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import UserCard from '@components/user/UserCard';
 import ActionList from '@components/ActionList';
 import BottomNav from '@components/BottomNav';
-const initialCryptomonnaies = [
-  { id: 1, icon: 'bitcoin', title: 'Bitcoin', subtitle: 'BTC', amount: '98000 USD', color: '#FF9900', isFavorite: false },
-  { id: 2, icon: 'ethereum', title: 'Ethereum', subtitle: 'ETH', amount: '3000 USD', color: '#3C3C3D', isFavorite: true },
-  { id: 3, icon: 'litecoin', title: 'Litecoin', subtitle: 'LTC', amount: '400 USD', color: '#BEBEBE', isFavorite: false },
-];
+import database from '@react-native-firebase/database';
+import { useRoute } from "@react-navigation/native";
 const actions = [
   { icon: require('../../assets/images/depot.png'), label: 'Dépôt', route: 'Depot' },
   { icon: require('../../assets/images/retrait.png'), label: 'Retrait', route: 'Retrait' },
-  { icon: require('../../assets/images/wallet2.png'), label: 'Wallet', route: 'PorteFeuille' },
+  { icon: require('../../assets/images/wallet2.png'), label: 'Portefeuille', route: 'PorteFeuille' },
 ];
 
-const user = {
-  name: "Emadaly", // Nom de l'utilisateur
-  fond: 1500, // Valeur des fonds actuels
-};
 export default function HomeScreen({ navigation }) {
+  const route = useRoute();
+  const [user,setUser]= useState(null);
+  const [favoris, setFavoris] = useState({});
+  const {userData } = route.params || {};
   const theme = useTheme();
   const [drawerVisible, setDrawerVisible] = React.useState(false);
-  const [fond,setFond] = useState(25000)
   const toggleDrawer = () => setDrawerVisible(!drawerVisible);
-  const [cryptomonnaiesList, setCryptoMonnaieList] = useState(initialCryptomonnaies);
-  
-  const toggleFavorite = (id) => {
-    setCryptoMonnaieList(prevList =>
-      prevList.map(cryptomonnaie =>
-        cryptomonnaie.id === id ? { ...cryptomonnaie, isFavorite: !cryptomonnaie.isFavorite } : cryptomonnaie
-      )
-    );
-  };
+  const [cryptomonnaiesList, setCryptoMonnaieList] = useState([]);
 
+
+  useEffect(() => {
+    if (userData?.email) {
+      const userRef = database().ref(`/utilisateurs`);
+  
+      userRef.on("value", (snapshot) => {
+        const users = snapshot.val();
+        if (users) {
+          const usersArray = Object.values(users).filter((user) => user !== null);
+          const foundUser = usersArray.find((user) => user.email === userData.email);
+          if (foundUser) {
+            setUser(foundUser);
+          }
+        }
+      });
+  
+      return () => userRef.off(); 
+    }
+  }, [userData]);
+
+
+  useEffect(() => {
+    const cryptoRef = database().ref(`/cryptos`);
+
+    const onCryptoUpdate = (snapshot) => {
+      const cryptoData = snapshot.val();
+      if (cryptoData) {
+        const cryptoArray = cryptoData.map((crypto) => ({
+          id: crypto.id,
+          image: crypto.image, // URL de l'image
+          nom: crypto.nom,
+          subtitle: crypto.nom.slice(0, 3).toUpperCase(), 
+          prix: `${crypto.valeur.toFixed(2)} USD`, 
+          color: "#BEBEBE",
+          isFavorite: false, // Gérer les favoris (peut être stocké dans AsyncStorage)
+        }));
+        setCryptoMonnaieList(cryptoArray);
+      }
+    };
+
+    cryptoRef.on("value", onCryptoUpdate);
+
+    // Nettoyage de l'écouteur lorsqu'on quitte l'écran
+    return () => cryptoRef.off("value", onCryptoUpdate);
+  }, []);
+
+  const toggleFavorite = (cryptoId) => {
+    if (!user || !user.id) {
+      Alert.alert("Erreur", "Utilisateur non trouvé.");
+      return;
+    }
+  
+    const favorisRef = database().ref(`utilisateurs/${user.id}/favoris/${cryptoId}`);
+  
+    favorisRef.once("value").then((snapshot) => {
+      if (snapshot.exists()) {
+        // Supprime des favoris
+        favorisRef.remove();
+      } else {
+        // Ajoute aux favoris
+        favorisRef.set(true);
+      }
+    });
+  };
+  
+
+  useEffect(() => {
+    if (user?.id) {
+      const favorisRef = database().ref(`utilisateurs/${user.id}/favoris`);
+  
+      favorisRef.on("value", (snapshot) => {
+        setFavoris(snapshot.val() || {}); 
+      });
+  
+      return () => favorisRef.off();
+    }
+  }, [user]);
+
+  const handleLogout = () => {
+    setUser(null);
+    navigation.navigate('SignIn');
+  };
   return (
     <>
       {/* Appbar */}
@@ -49,9 +113,9 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.headerContent}>
           <Text style={styles.welcomeText}>Welcome back</Text>
         </View>
-        <Appbar.Action icon="magnify" onPress={() => {}} />
+        <Appbar.Action icon="logout" onPress={handleLogout} />
       </Appbar.Header>
-
+  
       {/* Drawer Content */}
       {drawerVisible && (
         <Drawer.Section style={styles.drawer}>
@@ -64,11 +128,11 @@ export default function HomeScreen({ navigation }) {
             }}
           />
           <Drawer.Item
-            icon="credit-card"
-            label="Portefeuille Crypto"
-            onPress={() => {
-              setDrawerVisible(false);
-              navigation.navigate('PorteFeuille');
+          icon="credit-card"
+          label="Portefeuille Crypto"
+          onPress={() => {
+            setDrawerVisible(false);
+            user && navigation.navigate('PorteFeuille', { userId: user.id });
             }}
           />
           <Drawer.Item
@@ -76,62 +140,74 @@ export default function HomeScreen({ navigation }) {
             label="Historique Vente/Achat"
             onPress={() => {
               setDrawerVisible(false);
-              navigation.navigate('HistoriqueAV');
+              navigation.navigate('HistoriqueAV', { userId: user.id });
             }}
           />
         </Drawer.Section>
       )}
-
+  
       {/* Content */}
       <ScrollView style={styles.container}>
-        <UserCard name={user.name} fond={user.fond} navigation={navigation} />
-        <ActionList actions={actions} navigation={navigation} />
+        <UserCard
+          name={user?.email || "Chargement..."}
+          fond={user?.fond ?? 0}
+          navigation={navigation}
+        />
+        {user && <ActionList actions={actions} navigation={navigation} userId={user.id} fond={user?.fond ?? 0}/>}
 
+  
         {/* Transactions */}
         <View style={styles.transactionHeader}>
           <Text>Cryptomonnaie</Text>
           <Text>Cours Actuel</Text>
         </View>
-        {cryptomonnaiesList.map((cryptomonnaie) => (
-        <List.Item
-          key={cryptomonnaie.id}
-          style={styles.listItem}
-          title={cryptomonnaie.title}
-          description={cryptomonnaie.subtitle}
-          left={() => (
-            <View style={styles.leftContainer}>
-              <List.Icon
-                icon={cryptomonnaie.icon}
-                color={cryptomonnaie.color}
-                style={styles.icon}
-              />
-            </View>
-          )}
-          right={() => (
-            <View style={styles.rightContainer}>
-              <Text
-                style={[
-                  styles.amount,
-                  { color: cryptomonnaie.amount.startsWith('-') ? 'red' : theme.colors.primary },
-                ]}
-              >
-                {cryptomonnaie.amount}
-              </Text>
-              <IconButton
-                icon={cryptomonnaie.isFavorite ? 'heart' : 'heart-outline'}
-                color={cryptomonnaie.isFavorite ? 'red' : 'black'}
-                onPress={() => toggleFavorite(cryptomonnaie.id)}
-              />
-            </View>
-          )}
-        />
-      ))}
+  
+        {cryptomonnaiesList.map((cryptomonnaie) => {
+          // Déclarez isFavorite en dehors du JSX
+          const isFavorite = favoris?.[cryptomonnaie.id] ?? false;
+  
+          return (
+            <List.Item
+              key={cryptomonnaie.id}
+              style={styles.listItem}
+              title={cryptomonnaie.nom}
+              description={cryptomonnaie.subtitle}
+              left={() => (
+                <View style={styles.leftContainer}>
+                   <Image source={{ uri: cryptomonnaie.image }} style={styles.cryptoImage} />
+                </View>
+              )}
+              right={() => (
+                <View style={styles.rightContainer}>
+                  <Text
+                    style={[
+                      styles.amount,
+                      {
+                        color: cryptomonnaie.prix.startsWith('-')
+                          ? 'red'
+                          : theme.colors.primary,
+                      },
+                    ]}
+                  >
+                    {cryptomonnaie.prix}
+                  </Text>
+                  <IconButton
+                    icon={isFavorite ? 'heart' : 'heart-outline'}
+                    iconColor={isFavorite ? 'red' : 'black'}
+                    onPress={() => toggleFavorite(cryptomonnaie.id)}
+                  />
+                </View>
+              )}
+            />
+          );
+        })}
       </ScrollView>
-
+  
       {/* Bottom Navigation */}
-      <BottomNav navigation={navigation} />
+      {user &&  <BottomNav navigation={navigation}  userId={user.id}/>}
     </>
   );
+  
 }
 
 const styles = StyleSheet.create({
@@ -194,5 +270,10 @@ const styles = StyleSheet.create({
   },
   icon: {
     margin: 0,
+  },
+  cryptoImage: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
   },
 });

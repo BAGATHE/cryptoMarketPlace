@@ -1,22 +1,29 @@
 // components/TransactionRow.js
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { Text, Surface, Chip } from 'react-native-paper';
 
 const TransactionRow = ({ transaction }) => {
-  const { crypto, amount, date, type } = transaction;
-  const isPositive = type === 'ACHAT';
+  const { cryptomonnaie_id, cryptomonnaie_image, cryptomonnaie_nom, quantite, date, type, valeur } = transaction;
+  const isPositive = type === 'achat';
+
+  // Formatage de la date
+  const formattedDate = new Date(date.date).toLocaleString('fr-FR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   return (
     <Surface style={styles.transactionCard}>
       <View style={styles.transactionHeader}>
         <View style={styles.cryptoInfo}>
-          <Text style={styles.cryptoName}>{crypto}</Text>
-          <Text style={[
-            styles.amount,
-            { color: isPositive ? '#4CAF50' : '#F44336' }
-          ]}>
-            {isPositive ? '+' : '-'}{amount}
+          <Image source={{ uri: cryptomonnaie_image }} style={styles.cryptoImage} />
+          <Text style={styles.cryptoName}>{cryptomonnaie_nom}</Text>
+          <Text style={[styles.amount,{ color: isPositive ? '#4CAF50' : '#F44336' }]}>
+            {isPositive ? '+' : '-'}{parseFloat(quantite).toFixed(2)} ({parseFloat(valeur).toFixed(2)} $)
           </Text>
         </View>
         <Chip
@@ -34,7 +41,7 @@ const TransactionRow = ({ transaction }) => {
           </Text>
         </Chip>
       </View>
-      <Text style={styles.date}>{date}</Text>
+      <Text style={styles.date}>{formattedDate}</Text>
     </Surface>
   );
 };
@@ -55,14 +62,21 @@ const styles = StyleSheet.create({
   },
   cryptoInfo: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cryptoImage: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
   },
   cryptoName: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginBottom: 4,
+    marginRight: 8,
   },
   amount: {
-    fontSize: 15,
+    fontSize: 12,
     fontWeight: '500',
   },
   typeChip: {

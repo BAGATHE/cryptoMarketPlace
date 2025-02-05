@@ -2,9 +2,9 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { IconButton } from 'react-native-paper';
 
-export default function BottomNav({ navigation }) {
+export default function BottomNav({ navigation ,userId}) {
   const handleNavigation = (route) => {
-    navigation.navigate(route);
+    navigation.navigate(route,{ userId: userId });
   };
 
   return (

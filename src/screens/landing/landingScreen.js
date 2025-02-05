@@ -13,18 +13,11 @@ export default function LandingScreen({ navigation }) {
         
         <View style={styles.buttonContainer}>
           <Button
-            mode="contained"
-            onPress={() => navigation.navigate('SignUp')}
-            style={styles.buttonCto}
-          >
-            Create my Account
-          </Button>
-          <Button
             mode="outlined"
             onPress={() => navigation.navigate('SignIn')}
-            style={styles.button}
+            style={styles.buttonCto}
           >
-            I have an Account
+            Connexion
           </Button>
         </View>
         <CryptoBackground />

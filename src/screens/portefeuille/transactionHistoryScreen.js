@@ -1,37 +1,42 @@
-// screens/TransactionHistoryScreen.js
 import TransactionRow from '@components/TransactionRow';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import { Appbar, Chip, useTheme } from 'react-native-paper';
-
-
-// Données d'exemple
-const transactionData = [
-  {
-    id: 1,
-    crypto: 'Bitcoin',
-    amount: '0.05 BTC',
-    date: '2024-01-27T10:30:00',
-    type: 'ACHAT',
-  },
-  {
-    id: 2,
-    crypto: 'Ethereum',
-    amount: '1.5 ETH',
-    date: '2024-01-26T15:45:00',
-    type: 'VENTE',
-  },
-  {
-    id: 3,
-    crypto: 'Bitcoin',
-    amount: '0.03 BTC',
-    date: '2024-01-25T09:15:00',
-    type: 'VENTE',
-  },
-];
+import { useRoute } from "@react-navigation/native";
+import database from '@react-native-firebase/database';
 
 const TransactionHistoryScreen = ({ navigation }) => {
   const theme = useTheme();
+  const route = useRoute();
+  const { userId } = route.params;
+  const [transactionData, setTransactionData] = useState([]);
+  const [filter, setFilter] = useState('Tout'); 
+
+  useEffect(() => {
+    if (userId) {
+      const portefeuilleRef = database().ref(`/utilisateurs/${userId}/transactionCrypto`);
+
+      portefeuilleRef.on('value', snapshot => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const transactionArray = Object.values(data);
+          setTransactionData(transactionArray);
+        } else {
+          setTransactionData([]);
+        }
+      });
+
+      return () => portefeuilleRef.off();
+    }
+  }, [userId]);
+
+
+  const filteredTransactions = transactionData.filter(transaction => {
+    if (filter === 'Tout') return true; 
+    if (filter === 'Achats') return transaction.type === 'achat'; 
+    if (filter === 'Ventes') return transaction.type === 'vente'; 
+    return true;
+  });
 
   return (
     <View style={styles.container}>
@@ -43,21 +48,23 @@ const TransactionHistoryScreen = ({ navigation }) => {
 
       <View style={styles.filterContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <Chip 
-            selected 
-            onPress={() => {}} 
+          <Chip
+            selected={filter === 'Tout'}
+            onPress={() => setFilter('Tout')}
             style={styles.filterChip}
           >
             Tout
           </Chip>
-          <Chip 
-            onPress={() => {}} 
+          <Chip
+            selected={filter === 'Achats'}
+            onPress={() => setFilter('Achats')}
             style={styles.filterChip}
           >
             Achats
           </Chip>
-          <Chip 
-            onPress={() => {}} 
+          <Chip
+            selected={filter === 'Ventes'}
+            onPress={() => setFilter('Ventes')}
             style={styles.filterChip}
           >
             Ventes
@@ -66,9 +73,9 @@ const TransactionHistoryScreen = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.transactionList}>
-        {transactionData.map((transaction) => (
-          <TransactionRow 
-            key={transaction.id} 
+        {filteredTransactions.map((transaction) => (
+          <TransactionRow
+            key={transaction.id}
             transaction={transaction}
           />
         ))}
@@ -76,6 +83,7 @@ const TransactionHistoryScreen = ({ navigation }) => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
