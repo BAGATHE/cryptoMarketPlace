@@ -1,7 +1,7 @@
 import { StyleSheet, View, Text, ScrollView, Alert } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import React, { useState, useEffect } from 'react';
-import { sendLoginRequest,listenLoginResponse,updateOtpStatus } from '@services/firebaseService';
+import { sendLoginRequest,updateOtpStatus,waitForResponse,handleUserAuthentication} from '@services/firebaseService';
 import { ActivityIndicator } from 'react-native-paper';
 import database from '@react-native-firebase/database';
 
@@ -33,7 +33,7 @@ export default function SignIn({ navigation }) {
       }
     }
     return () => clearInterval(countdown);
-  }, [otpSent, timer, otpStatus]); // 🔥 Ajout de `otpStatus`
+  }, [otpSent, timer, otpStatus]); 
   
 
   const handleSignIn = async () => {
@@ -41,39 +41,21 @@ export default function SignIn({ navigation }) {
       try {
         setIsLoading(true);
         const reqId = await sendLoginRequest(email, password);
-        setRequestId(reqId);
-  
+        setRequestId(reqId);        
         const responseRef = database().ref(`/requests/${reqId}`);
-  
-        // Fonction qui attend que response soit rempli
-        const waitForResponse = async () => {
-          return new Promise((resolve) => {
-            const checkResponse = (snapshot) => {
-              const data = snapshot.val();
-              console.log("🔍 Mise à jour des données :", data);
-  
-              if (data?.response && data.response.trim() !== "") {
-                responseRef.off("value", checkResponse); // Arrêter l'écoute une fois les données reçues
-                resolve(data);
-              }
-            };
-  
-            // Écoute en boucle jusqu'à ce que response soit rempli
-            responseRef.on("value", checkResponse);
-          });
-        };
-  
         // Attente active jusqu'à ce que response soit rempli
-        const data = await waitForResponse();
-  
+        const data = await waitForResponse(responseRef);
         // Une fois la réponse reçue, continuer le processus normalement
         let cleanedResponse = data.response.replace(/[\u0000-\u001F\u007F-\u009F]/g, "").trim();
         let responseObject = JSON.parse(cleanedResponse);
-  
         let code = responseObject?.code || 200;
-        let message = responseObject?.data?.message || "Valeur non disponible";
-  
-        if (code === 200) {
+        let message = responseObject?.data?.message || "utilisateur non trouver veuillez revenir en arriere";
+
+        if (code === 401) {
+          Alert.alert("Erreur", responseObject.error?.message);
+          responseRef.remove();
+        } 
+        if(code === 200 ) {
           setIsLoading(false);
           setOtpSent(true);
           Alert.alert("OTP Envoyé", message);
@@ -81,8 +63,6 @@ export default function SignIn({ navigation }) {
         } else {
           setIsLoading(false);
           Alert.alert("Erreur", responseObject.error?.message || "Erreur inconnue");
-  
-          // Supprimer la référence Firebase
           responseRef.remove();
         }
       } catch (error) {
@@ -100,39 +80,20 @@ export default function SignIn({ navigation }) {
         await updateOtpStatus(requestId, otp);
         const responseRef = database().ref(`/requests/${requestId}`);
   
-        responseRef.on('value', (snapshot) => {
+        responseRef.on('value', async (snapshot) => {
           const data = snapshot.val();
-          if (data) {
-            if (data.status === "success") {
-              setOtpStatus("success"); 
-              setOtp(false);
-              responseRef.remove();
-              
-              
-            const userRef = database().ref(`/utilisateurs`);
-            userRef.once('value', (userSnapshot) => {
-              const users = userSnapshot.val();
-
-              const userEmails = Object.values(users)
-                .filter(user => user !== null) 
-                .map(user => user.email); 
-
-              if (userEmails.includes(data.email)) { 
-                const requestRef = database().ref('/login').push();
-                const requestData = {
-                  email: data.email, 
-                };
-                requestRef.set(requestData);
-              }
-            });
+          if (data && data.status === "success") {
+            setOtpStatus("success"); 
+            setOtp(false);
+            responseRef.remove();
+  
+            await handleUserAuthentication(email);
+  
             setIsLoading(true);
-            
             setTimeout(() => {
               setIsLoading(false);
-              navigation.navigate("Home", { userData: data });
-            }, 5000); 
-            
-          }
+              navigation.navigate("Home", { email: email });
+            }, 5000);
           }
         });
       } catch (error) {

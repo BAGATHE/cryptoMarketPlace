@@ -2,29 +2,31 @@ import React from "react";
 import { View, Text, StyleSheet, Image } from "react-native";
 import { Card, IconButton } from "react-native-paper";
 
-const UserCard = ({ name, fond, navigation }) => {
+const UserCard = ({ user, email,navigation }) => {
+  const defaultImage = require("../../assets/images/user.png");
+  const profileImage = user?.profil 
+  ? { uri: `${user.profil.replace('/upload/', '/upload/w_200,h_200,c_fill,q_auto,f_auto/')}` }
+  : defaultImage;
+
   return (
     <Card style={styles.card}>
       <Card.Content>
         <View style={styles.header}>
           {/* Avatar avec bouton d'édition */}
           <View style={styles.avatarContainer}>
-            <Image
-              source={require("../../assets/images/profil.jpg")}
-              style={styles.avatar}
-            />
+            <Image source={profileImage} style={styles.avatar} />
             <IconButton
               icon="pencil"
               size={20}
               style={styles.editIcon}
-              onPress={() => navigation.navigate("Profil")}
+              onPress={() => navigation.navigate("Profil", { email: email })}
             />
           </View>
           {/* Nom et fond actuel */}
           <View style={styles.details}>
-            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.name}>{user?.email || "Chargement..."}</Text>
             <Text style={styles.fond}>
-              Fond actuel : <Text style={styles.fondValue}>{fond.toFixed(2)} $</Text>
+              Fond actuel : <Text style={styles.fondValue}>{user?.fond?.toFixed(2) ?? 0} $</Text>
             </Text>
           </View>
         </View>
@@ -67,7 +69,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   name: {
-    fontSize: 18,
+    fontSize: 10,
     fontWeight: "bold",
     marginBottom: 4,
   },

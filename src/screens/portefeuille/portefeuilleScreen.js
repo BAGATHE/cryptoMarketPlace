@@ -4,29 +4,49 @@ import { View, StyleSheet, ScrollView } from 'react-native';
 import { Appbar, Text, Surface, Title, useTheme,Button} from 'react-native-paper';
 import { useRoute } from "@react-navigation/native";
 import database from '@react-native-firebase/database';
+import {findUserByEmail} from '@services/firebaseService';
 export default function PortefeuilleScreen({ navigation }) {
   const route = useRoute();
   const theme = useTheme();
-  const { userId } = route.params;
+  const { email } = route.params;
+  const [userEmail,setUserEmail] = useState("");
   const [cryptoData, setCryptoData] = useState([]);
+  const [userKey, setUserKey] = useState(null);  // Stocke la clé utilisateur dans un état
 
   useEffect(() => {
-    if (userId) {
-      const portefeuilleRef = database().ref(`/utilisateurs/${userId}/porteFeuille`);
+    if (email) {
+      const fetchUserData = async () => {
+        try {
+          const { matchingUserKey } = await findUserByEmail(email);  
+          setUserKey(matchingUserKey); 
+          setUserEmail(email);
+          console.log("user key ==" + userKey);
+        } catch (error) {
+          console.error("Erreur lors de la récupération de l'utilisateur :", error);
+        }
+      };
 
-      portefeuilleRef.on('value', snapshot => {
+      fetchUserData();  
+    }
+  }, [email]);
+
+   useEffect(() => {
+    if (userKey) {
+      const portefeuilleRef = database().ref(`/utilisateurs/${userKey}/porteFeuille`);
+
+      const portefeuilleListener = portefeuilleRef.on('value', snapshot => {
         if (snapshot.exists()) {
           const data = snapshot.val();
-          const cryptoArray = Object.values(data); 
+          const cryptoArray = Object.values(data);
+          console.log("tab crypto" + cryptoArray.length);
           setCryptoData(cryptoArray);
         } else {
           setCryptoData([]); 
         }
       });
-
-      return () => portefeuilleRef.off(); 
+      return () => portefeuilleRef.off('value', portefeuilleListener);
     }
-  }, [userId]);
+  }, [userKey]);
   return (
     <View style={styles.container}>
       <Appbar.Header style={[styles.appBar, { backgroundColor: '#002967' }]}>
@@ -40,7 +60,7 @@ export default function PortefeuilleScreen({ navigation }) {
         <Text style={styles.portfolioLabel}>Historique achat et vente</Text>
         <Button
         mode="contained"
-        onPress={() => navigation.navigate('HistoriqueAV', { userId: userId })}
+        onPress={() => navigation.navigate('HistoriqueAV', { email: userEmail })}
         style={styles.button}
         >
           Voir 
@@ -49,9 +69,15 @@ export default function PortefeuilleScreen({ navigation }) {
 
         <Title style={styles.sectionTitle}>Mes Actifs</Title>
 
-        {cryptoData.map((crypto) => (
-        <CryptoCard key={crypto.id} crypto={crypto} />
-      ))}
+        {cryptoData && cryptoData.length > 0 ? (
+          cryptoData.map((crypto) => (
+            crypto && Object.keys(crypto).length > 0 ? (
+            <CryptoCard key={crypto.id} crypto={crypto} />
+          ) : null
+        ))
+      ) : (
+      <Text>Aucune donnée crypto disponible.</Text>
+      )}
       </ScrollView>
     </View>
   );

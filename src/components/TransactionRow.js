@@ -4,28 +4,24 @@ import { View, StyleSheet, Image } from 'react-native';
 import { Text, Surface, Chip } from 'react-native-paper';
 
 const TransactionRow = ({ transaction }) => {
-  const { cryptomonnaie_id, cryptomonnaie_image, cryptomonnaie_nom, quantite, date, type, valeur } = transaction;
+  const { cryptomonnaie_id, cryptomonnaie_image, cryptomonnaie_nom, date, id, quantite, type, valeur } = transaction;
   const isPositive = type === 'achat';
-
-  // Formatage de la date
-  const formattedDate = new Date(date.date).toLocaleString('fr-FR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 
   return (
     <Surface style={styles.transactionCard}>
       <View style={styles.transactionHeader}>
         <View style={styles.cryptoInfo}>
-          <Image source={{ uri: cryptomonnaie_image }} style={styles.cryptoImage} />
-          <Text style={styles.cryptoName}>{cryptomonnaie_nom}</Text>
-          <Text style={[styles.amount,{ color: isPositive ? '#4CAF50' : '#F44336' }]}>
-            {isPositive ? '+' : '-'}{parseFloat(quantite).toFixed(2)} ({parseFloat(valeur).toFixed(2)} $)
+          {cryptomonnaie_image ? (
+            <Image source={{ uri: cryptomonnaie_image }} style={styles.cryptoImage} />
+          ) : (
+            <View style={styles.placeholderImage} />
+          )}
+          <Text style={styles.cryptoName}>{cryptomonnaie_nom || 'Nom inconnu'}</Text>
+          <Text style={[styles.amount, { color: isPositive ? '#4CAF50' : '#F44336' }]}> 
+            {isPositive ? '+' : '-'}{quantite ? parseFloat(quantite).toFixed(2) : '0.00'}
           </Text>
         </View>
+
         <Chip
           mode="flat"
           style={[
@@ -33,15 +29,18 @@ const TransactionRow = ({ transaction }) => {
             { backgroundColor: isPositive ? '#E8F5E9' : '#FFEBEE' }
           ]}
         >
-          <Text style={{ 
-            color: isPositive ? '#4CAF50' : '#F44336',
-            fontWeight: '500'
-          }}>
-            {type}
+          <Text style={{ color: isPositive ? '#4CAF50' : '#F44336', fontWeight: '500' }}>
+            {type || 'Type inconnu'}
           </Text>
         </Chip>
       </View>
-      <Text style={styles.date}>{formattedDate}</Text>
+
+      <Text>
+        valeur : ({valeur ? parseFloat(valeur).toFixed(2) : '0.00'} $)
+      </Text>
+      <Text style={styles.date}>
+        {date? new Date(date).toLocaleDateString() : 'Date inconnue'}
+      </Text>
     </Surface>
   );
 };
@@ -49,41 +48,48 @@ const TransactionRow = ({ transaction }) => {
 const styles = StyleSheet.create({
   transactionCard: {
     padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    elevation: 2,
+    marginVertical: 8,
     backgroundColor: 'white',
+    borderRadius: 8,
+    elevation: 2,
   },
   transactionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
   },
   cryptoInfo: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
   },
   cryptoImage: {
-    width: 24,
-    height: 24,
+    width: 40,
+    height: 40,
     marginRight: 8,
+  },
+  placeholderImage: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#E0E0E0',
+    marginRight: 8,
+    borderRadius: 20,
   },
   cryptoName: {
     fontSize: 16,
     fontWeight: 'bold',
-    marginRight: 8,
   },
   amount: {
-    fontSize: 12,
-    fontWeight: '500',
+    marginLeft: 8,
+    fontSize: 16,
   },
   typeChip: {
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    height: 30,
+    justifyContent: 'center',
   },
   date: {
-    color: '#666666',
+    marginTop: 8,
+    color: '#757575',
     fontSize: 14,
   },
 });

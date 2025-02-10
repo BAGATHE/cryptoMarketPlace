@@ -7,7 +7,7 @@ export default function DepotScreen({ navigation }) {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const route = useRoute();
-  const { userId } = route.params;
+  const { email } = route.params;
 
     const handleDeposit = () => {
       if (!amount || isNaN(amount)) {
@@ -20,7 +20,7 @@ export default function DepotScreen({ navigation }) {
       const currentDate = new Date().toISOString();
   
       const transaction = {
-        userId: userId, 
+        email: email, 
         montant: parseFloat(amount), 
         type: 'depot', 
         date: currentDate, 
