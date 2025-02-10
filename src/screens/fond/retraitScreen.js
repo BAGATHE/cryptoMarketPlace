@@ -8,7 +8,7 @@ export default function RetraitScreen({ navigation }) {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const route = useRoute();
-  const { userId ,fond} = route.params;
+  const { email ,fond} = route.params;
 
   const handleWithdrawal = () => {
     if (!amount || isNaN(amount)) {
@@ -25,8 +25,8 @@ export default function RetraitScreen({ navigation }) {
     const currentDate = new Date().toISOString();
 
     const transaction = {
-      userId: userId, 
-      amount: parseFloat(amount),
+      email: email, 
+      montant: parseFloat(amount), 
       type: 'retrait', 
       date: currentDate, 
     };

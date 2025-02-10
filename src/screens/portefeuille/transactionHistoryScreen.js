@@ -1,20 +1,38 @@
 import TransactionRow from '@components/TransactionRow';
 import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
-import { Appbar, Chip, useTheme } from 'react-native-paper';
+import { Appbar, Chip, useTheme,Text } from 'react-native-paper';
 import { useRoute } from "@react-navigation/native";
 import database from '@react-native-firebase/database';
-
+import {findUserByEmail} from '@services/firebaseService';
 const TransactionHistoryScreen = ({ navigation }) => {
   const theme = useTheme();
   const route = useRoute();
-  const { userId } = route.params;
+  const { email } = route.params;
+  const [userEmail,setUserEmail] = useState("");
   const [transactionData, setTransactionData] = useState([]);
   const [filter, setFilter] = useState('Tout'); 
+  const [userKey, setUserKey] = useState(null);
 
   useEffect(() => {
-    if (userId) {
-      const portefeuilleRef = database().ref(`/utilisateurs/${userId}/transactionCrypto`);
+    if (email) {
+      const fetchUserData = async () => {
+        try {
+          const { matchingUserKey } = await findUserByEmail(email);  
+          setUserKey(matchingUserKey); 
+          setUserEmail(email);
+        } catch (error) {
+          console.error("Erreur lors de la récupération de l'utilisateur :", error);
+        }
+      };
+
+      fetchUserData();  
+    }
+  }, [email]);
+
+  useEffect(() => {
+    if (userKey) {
+      const portefeuilleRef = database().ref(`/utilisateurs/${userKey}/transactionCrypto`);
 
       portefeuilleRef.on('value', snapshot => {
         if (snapshot.exists()) {
@@ -28,15 +46,18 @@ const TransactionHistoryScreen = ({ navigation }) => {
 
       return () => portefeuilleRef.off();
     }
-  }, [userId]);
+  }, [userKey]);
 
 
-  const filteredTransactions = transactionData.filter(transaction => {
-    if (filter === 'Tout') return true; 
-    if (filter === 'Achats') return transaction.type === 'achat'; 
-    if (filter === 'Ventes') return transaction.type === 'vente'; 
-    return true;
-  });
+  const filteredTransactions = transactionData && transactionData.length > 0
+  ? transactionData.filter((transaction) => {
+      if (!transaction) return false; 
+      if (filter === 'Tout') return true;
+      if (filter === 'Achats') return transaction.type === 'achat';
+      if (filter === 'Ventes') return transaction.type === 'vente';
+      return true;
+    })
+  : []; 
 
   return (
     <View style={styles.container}>
@@ -73,13 +94,19 @@ const TransactionHistoryScreen = ({ navigation }) => {
       </View>
 
       <ScrollView style={styles.transactionList}>
-        {filteredTransactions.map((transaction) => (
-          <TransactionRow
-            key={transaction.id}
-            transaction={transaction}
-          />
-        ))}
-      </ScrollView>
+      {filteredTransactions.length > 0 ? (
+        filteredTransactions.map((transaction) => (
+          transaction ? ( 
+            <TransactionRow
+              key={transaction.id}
+              transaction={transaction}
+            />
+          ) : null
+        ))
+      ) : (
+        <Text style={styles.noDataText}>Aucune transaction disponible.</Text>
+      )}
+    </ScrollView>
     </View>
   );
 };

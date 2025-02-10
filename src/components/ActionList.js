@@ -1,14 +1,14 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 
-export default function ActionList({ actions, navigation ,userId,fond}) {
+export default function ActionList({ actions, navigation ,email,fond}) {
   return (
     <View style={styles.actions}>
       {actions.map((action, index) => (
         <TouchableOpacity
           key={index}
           style={styles.actionItem}
-          onPress={() => navigation.navigate(action.route, { userId,fond })}
+          onPress={() => navigation.navigate(action.route, { email,fond })}
         >
           {/* Affichage de l'image PNG */}
           <Image

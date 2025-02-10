@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.mobilemarketplace">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -6,10 +8,28 @@
       android:name=".MainApplication"
       android:label="@string/app_name"
       android:icon="@mipmap/ic_launcher"
-      android:roundIcon="@mipmap/ic_launcher_round"
+      android:roundIcon="@mipmap/ic_launcher"
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:supportsRtl="true">
+      <service
+          android:name="io.invertase.firebase.messaging.ReactNativeFirebaseMessagingService"
+          android:exported="false">
+          <intent-filter>
+              <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+          </intent-filter>
+      </service>
+        <receiver
+          android:name="io.invertase.firebase.messaging.ReactNativeFirebaseMessagingReceiver"
+          android:exported="true">
+          <intent-filter>
+              <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+          </intent-filter>
+      </receiver>
+       <meta-data
+        android:name="com.google.firebase.messaging.default_notification_channel_id"
+        android:value="default_channel"
+        tools:replace="android:value" />
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
@@ -23,4 +43,6 @@
         </intent-filter>
       </activity>
     </application>
+    
 </manifest>
+

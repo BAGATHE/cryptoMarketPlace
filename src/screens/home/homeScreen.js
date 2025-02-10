@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, View, ScrollView,TouchableOpacity, Alert,Image} from 'react-native';
 import {Appbar,Text,IconButton,List,Drawer,useTheme,} from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import UserCard from '@components/user/UserCard';
 import ActionList from '@components/ActionList';
 import BottomNav from '@components/BottomNav';
 import database from '@react-native-firebase/database';
 import { useRoute } from "@react-navigation/native";
+import {findUserByEmail} from '@services/firebaseService';
 const actions = [
   { icon: require('../../assets/images/depot.png'), label: 'Dépôt', route: 'Depot' },
   { icon: require('../../assets/images/retrait.png'), label: 'Retrait', route: 'Retrait' },
@@ -16,32 +16,43 @@ const actions = [
 export default function HomeScreen({ navigation }) {
   const route = useRoute();
   const [user,setUser]= useState(null);
+  const [userKey,setUserKey] = useState("");
+  const [userFond, setUserFond] = useState(0);
   const [favoris, setFavoris] = useState({});
-  const {userData } = route.params || {};
+  const {email } = route.params || {};
   const theme = useTheme();
   const [drawerVisible, setDrawerVisible] = React.useState(false);
   const toggleDrawer = () => setDrawerVisible(!drawerVisible);
   const [cryptomonnaiesList, setCryptoMonnaieList] = useState([]);
 
+  const handleRefreshFond = () => {
+    navigation.navigate("Home", { email: email });
+    Alert.alert("refresh","les fond serons rafraichis ils sont deja visible dans depot et retrait");
+  };
+
+
 
   useEffect(() => {
-    if (userData?.email) {
-      const userRef = database().ref(`/utilisateurs`);
-  
-      userRef.on("value", (snapshot) => {
-        const users = snapshot.val();
-        if (users) {
-          const usersArray = Object.values(users).filter((user) => user !== null);
-          const foundUser = usersArray.find((user) => user.email === userData.email);
-          if (foundUser) {
-            setUser(foundUser);
-          }
-        }
+    const fetchUserData = async () => {
+      if (email) {
+        const { matchingUser, matchingUserKey } = await findUserByEmail(email);
+        setUser(matchingUser);
+        setUserKey(matchingUserKey);
+      }
+    };
+    
+    fetchUserData();
+  }, [email]);
+
+  useEffect(() => {
+    if (userKey) {
+      const fondRef = database().ref(`/utilisateurs/${userKey}/fond`);
+      const fondListener = fondRef.on('value', snapshot => {
+        setUserFond(snapshot.val());
       });
-  
-      return () => userRef.off(); 
+      return () => fondRef.off('value', fondListener);
     }
-  }, [userData]);
+  }, [userKey]);
 
 
   useEffect(() => {
@@ -69,37 +80,40 @@ export default function HomeScreen({ navigation }) {
     return () => cryptoRef.off("value", onCryptoUpdate);
   }, []);
 
-  const toggleFavorite = (cryptoId) => {
-    if (!user || !user.id) {
-      Alert.alert("Erreur", "Utilisateur non trouvé.");
-      return;
-    }
-  
-    const favorisRef = database().ref(`utilisateurs/${user.id}/favoris/${cryptoId}`);
-  
-    favorisRef.once("value").then((snapshot) => {
+
+
+  const toggleFavorite = async (cryptoId) => {
+    try {
+      const favorisRef = database().ref(`utilisateurs/${userKey}/favoris/${cryptoId}`);
+      const snapshot = await favorisRef.once("value");
       if (snapshot.exists()) {
-        // Supprime des favoris
-        favorisRef.remove();
+        await favorisRef.remove();
+        Alert.alert("Succès", "Crypto retiré des favoris.");
       } else {
-        // Ajoute aux favoris
-        favorisRef.set(true);
+        await favorisRef.set(true);
+        Alert.alert("Succès", "Crypto ajouté aux favoris.");
       }
-    });
+  
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des favoris:", error);
+      Alert.alert("Erreur", "Une erreur s'est produite lors de la mise à jour des favoris.");
+    }
   };
+  
   
 
   useEffect(() => {
-    if (user?.id) {
-      const favorisRef = database().ref(`utilisateurs/${user.id}/favoris`);
-  
-      favorisRef.on("value", (snapshot) => {
+    if (userKey) {  
+      const favorisRef = database().ref(`utilisateurs/${userKey}/favoris`);
+      const favorisListener = favorisRef.on("value", (snapshot) => {
         setFavoris(snapshot.val() || {}); 
       });
-  
-      return () => favorisRef.off();
+      return () => {
+        favorisRef.off("value", favorisListener);
+      };
     }
-  }, [user]);
+  }, [userKey]); 
+  
 
   const handleLogout = () => {
     setUser(null);
@@ -113,6 +127,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.headerContent}>
           <Text style={styles.welcomeText}>Welcome back</Text>
         </View>
+        <Appbar.Action icon="refresh" onPress={handleRefreshFond} />
         <Appbar.Action icon="logout" onPress={handleLogout} />
       </Appbar.Header>
   
@@ -132,7 +147,7 @@ export default function HomeScreen({ navigation }) {
           label="Portefeuille Crypto"
           onPress={() => {
             setDrawerVisible(false);
-            user && navigation.navigate('PorteFeuille', { userId: user.id });
+            user && navigation.navigate('PorteFeuille', { email: user.email });
             }}
           />
           <Drawer.Item
@@ -140,7 +155,7 @@ export default function HomeScreen({ navigation }) {
             label="Historique Vente/Achat"
             onPress={() => {
               setDrawerVisible(false);
-              navigation.navigate('HistoriqueAV', { userId: user.id });
+              navigation.navigate('HistoriqueAV', { email: user.email });
             }}
           />
         </Drawer.Section>
@@ -148,14 +163,9 @@ export default function HomeScreen({ navigation }) {
   
       {/* Content */}
       <ScrollView style={styles.container}>
-        <UserCard
-          name={user?.email || "Chargement..."}
-          fond={user?.fond ?? 0}
-          navigation={navigation}
-        />
-        {user && <ActionList actions={actions} navigation={navigation} userId={user.id} fond={user?.fond ?? 0}/>}
+      {user && (<UserCard user={user} email={user.email}  navigation={navigation} />)}
+      {user && <ActionList actions={actions} navigation={navigation} email={user.email} fond={typeof userFond === 'number' ? userFond : 0}/>}
 
-  
         {/* Transactions */}
         <View style={styles.transactionHeader}>
           <Text>Cryptomonnaie</Text>
@@ -204,7 +214,7 @@ export default function HomeScreen({ navigation }) {
       </ScrollView>
   
       {/* Bottom Navigation */}
-      {user &&  <BottomNav navigation={navigation}  userId={user.id}/>}
+      {user &&  <BottomNav navigation={navigation}  email={user.email}/>}
     </>
   );
   
